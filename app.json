@@ -19,7 +19,13 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Özel Ders Asistanı",
+      "shortName": "Özel Ders",
+      "themeColor": "#4F46E5",
+      "backgroundColor": "#F8FAFC",
+      "display": "standalone",
+      "orientation": "portrait"
     },
     "plugins": [
       "expo-secure-store"
