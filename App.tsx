@@ -30,6 +30,9 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Dark Mode Durumu (Varsayılan: Gece modu açık mı?)
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'lessons' | 'students' | 'stats'>('lessons');
 
   // Veri durumları
@@ -53,6 +56,8 @@ export default function App() {
   const [lessonModalVisible, setLessonModalVisible] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentSearchQuery, setStudentSearchQuery] = useState(''); // Öğrenci Arama Filtresi
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Açılır Menü
   const [lessonDate, setLessonDate] = useState(new Date().toISOString().split('T')[0]);
   const [lessonHours, setLessonHours] = useState('1');
   const [lessonRate, setLessonRate] = useState('1000');
@@ -146,14 +151,21 @@ export default function App() {
     fetchData();
   };
 
-  // Seçili ay değiştiğinde veya sayfa ilk açıldığında o aya otomatik kaydır
+  // Seçili ay değiştiğinde veya sayfa ilk açıldığında o aya garantili otomatik kaydır
   useEffect(() => {
-    if (monthScrollRef.current) {
-      // Her ay butonu yaklaşık 75px genişliğinde
-      const targetX = Math.max(0, (selectedMonth - 1) * 75 - 120);
-      monthScrollRef.current.scrollTo({ x: targetX, animated: true });
-    }
-  }, [selectedMonth]);
+    const timer = setTimeout(() => {
+      if (monthScrollRef.current) {
+        // Her ay butonu yaklaşık 78px
+        const targetX = Math.max(0, (selectedMonth - 1) * 78 - 100);
+        if (typeof monthScrollRef.current.scrollTo === 'function') {
+          monthScrollRef.current.scrollTo({ x: targetX, animated: true });
+        } else if (monthScrollRef.current.scrollLeft !== undefined) {
+          monthScrollRef.current.scrollLeft = targetX;
+        }
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [selectedMonth, activeTab]);
   const monthLessons = useMemo(() => {
     const monthStr = selectedMonth < 10 ? `0${selectedMonth}` : `${selectedMonth}`;
     const prefix = `${selectedYear}-${monthStr}`;
@@ -193,6 +205,8 @@ export default function App() {
   const openNewLessonModal = (preselected?: Student) => {
     setEditingLesson(null);
     setSelectedStudent(preselected || (students.find(s => s.is_active) || null));
+    setStudentSearchQuery('');
+    setIsDropdownOpen(false);
     setLessonDate(selectedDateFilter || new Date().toISOString().split('T')[0]);
     setLessonHours('1');
     setLessonRate(preselected ? String(preselected.hourly_rate) : '1000');
@@ -497,20 +511,32 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#0F172A' }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       {/* ÜST HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, isDarkMode && { backgroundColor: '#1E293B', borderBottomColor: '#334155' }]}>
         <View>
-          <Text style={styles.headerSubtitle}>
+          <Text style={[styles.headerSubtitle, isDarkMode && { color: '#818CF8' }]}>
             {session.user.user_metadata?.full_name || 'ÖĞRETMEN ASİSTANI'}
           </Text>
-          <Text style={styles.headerTitle}>
+          <Text style={[styles.headerTitle, isDarkMode && { color: '#F8FAFC' }]}>
             {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            style={[styles.themeToggleBtn, isDarkMode && styles.themeToggleBtnDark]}
+            onPress={() => setIsDarkMode(!isDarkMode)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={isDarkMode ? 'sunny' : 'moon'}
+              size={18}
+              color={isDarkMode ? '#F59E0B' : '#4F46E5'}
+            />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.addBtn}
             onPress={() => openNewLessonModal()}
@@ -520,11 +546,11 @@ export default function App() {
             <Text style={styles.addBtnText}>Ders Yaz</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.logoutBtn}
+            style={[styles.logoutBtn, isDarkMode && { backgroundColor: '#334155' }]}
             onPress={handleLogout}
             activeOpacity={0.8}
           >
-            <Ionicons name="log-out-outline" size={20} color="#4F46E5" />
+            <Ionicons name="log-out-outline" size={20} color={isDarkMode ? '#F87171' : '#4F46E5'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -1025,33 +1051,85 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            {/* Öğrenci Seçimi */}
+            {/* Öğrenci Seçimi (Aramalı Dropdown / Select Menü) */}
             <Text style={styles.inputLabel}>Öğrenci Seç:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.studentChips}>
-              {students
-                .filter(s => s.is_active || (editingLesson && editingLesson.student_id === s.id))
-                .map((s) => {
-                  const isSelected = selectedStudent?.id === s.id;
-                  return (
-                    <TouchableOpacity
-                      key={s.id}
-                      style={[
-                        styles.chip,
-                        isSelected && { backgroundColor: '#4F46E5', borderColor: '#4F46E5' },
-                      ]}
-                      onPress={() => {
-                        setSelectedStudent(s);
-                        setLessonRate(String(s.hourly_rate));
-                      }}
-                    >
-                      <View style={[styles.chipDot, { backgroundColor: s.color || '#94A3B8' }]} />
-                      <Text style={[styles.chipText, isSelected && { color: '#FFFFFF' }]}>
-                        {s.name}
-                      </Text>
+
+            {/* Seçili Öğrenci Kutusu */}
+            <TouchableOpacity
+              style={styles.dropdownSelector}
+              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {selectedStudent ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={[styles.chipDot, { backgroundColor: selectedStudent.color || '#3B82F6', width: 12, height: 12 }]} />
+                  <Text style={styles.dropdownSelectedText}>
+                    {selectedStudent.name} ({selectedStudent.hourly_rate} TL/saat)
+                  </Text>
+                </View>
+              ) : (
+                <Text style={{ color: '#94A3B8', fontSize: 14 }}>Bir öğrenci seçin...</Text>
+              )}
+              <Ionicons
+                name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+
+            {/* Açılır Arama Listesi */}
+            {isDropdownOpen && (
+              <View style={styles.dropdownListContainer}>
+                {/* Arama Inputu */}
+                <View style={styles.dropdownSearchWrapper}>
+                  <Ionicons name="search" size={16} color="#94A3B8" />
+                  <TextInput
+                    style={styles.dropdownSearchInput}
+                    placeholder="Öğrenci ara..."
+                    value={studentSearchQuery}
+                    onChangeText={setStudentSearchQuery}
+                    placeholderTextColor="#94A3B8"
+                    autoFocus
+                  />
+                  {studentSearchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setStudentSearchQuery('')}>
+                      <Ionicons name="close-circle" size={16} color="#94A3B8" />
                     </TouchableOpacity>
-                  );
-                })}
-            </ScrollView>
+                  )}
+                </View>
+
+                {/* Filtrelenmiş Öğrenci Listesi */}
+                <ScrollView style={{ maxHeight: 180 }} nestedScrollEnabled>
+                  {students
+                    .filter(s => s.is_active || (editingLesson && editingLesson.student_id === s.id))
+                    .filter(s => s.name.toLowerCase().includes(studentSearchQuery.toLowerCase()))
+                    .map((s) => (
+                      <TouchableOpacity
+                        key={s.id}
+                        style={[
+                          styles.dropdownItem,
+                          selectedStudent?.id === s.id && styles.dropdownItemActive,
+                        ]}
+                        onPress={() => {
+                          setSelectedStudent(s);
+                          setLessonRate(String(s.hourly_rate));
+                          setIsDropdownOpen(false);
+                          setStudentSearchQuery('');
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <View style={[styles.chipDot, { backgroundColor: s.color || '#3B82F6' }]} />
+                          <Text style={[styles.dropdownItemText, selectedStudent?.id === s.id && { fontWeight: '700', color: '#4F46E5' }]}>
+                            {s.name}
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 12, color: '#64748B' }}>
+                          {s.hourly_rate} TL • {s.source}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                </ScrollView>
+              </View>
+            )}
 
             {/* Tarih Girişi */}
             <Text style={styles.inputLabel}>Tarih (YYYY-MM-DD):</Text>
@@ -1265,6 +1343,80 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  themeToggleBtn: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeToggleBtnDark: {
+    backgroundColor: '#334155',
+  },
+  dropdownSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginVertical: 4,
+  },
+  dropdownSelectedText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  dropdownListContainer: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    marginTop: 4,
+    marginBottom: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  dropdownSearchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 6,
+  },
+  dropdownSearchInput: {
+    flex: 1,
+    marginLeft: 6,
+    fontSize: 13,
+    color: '#0F172A',
+    paddingVertical: 2,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  dropdownItemActive: {
+    backgroundColor: '#EEF2FF',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#334155',
   },
   accountSettingsCard: {
     backgroundColor: '#FFFFFF',
