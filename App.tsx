@@ -38,12 +38,16 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Filtreler
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
+  // Filtreler: Varsayılan olarak bugünün ayını ve yılını al (Örn: Kasım = 11)
+  const currentRealDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentRealDate.getMonth() + 1); // 1-12
+  const [selectedYear, setSelectedYear] = useState<number>(currentRealDate.getFullYear());
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null); // 'YYYY-MM-DD'
   const [studentFilter, setStudentFilter] = useState<'all' | 'active' | 'passive'>('active');
   const [statsViewMode, setStatsViewMode] = useState<'student' | 'source'>('student'); // 'student' veya 'source'
+
+  // Ay Scroll Referansı (Seçili aya otomatik kaydırma)
+  const monthScrollRef = React.useRef<any>(null);
 
   // Modal: Ders Ekle / Düzenle
   const [lessonModalVisible, setLessonModalVisible] = useState(false);
@@ -142,7 +146,14 @@ export default function App() {
     fetchData();
   };
 
-  // Seçili Ayın Dersleri
+  // Seçili ay değiştiğinde veya sayfa ilk açıldığında o aya otomatik kaydır
+  useEffect(() => {
+    if (monthScrollRef.current) {
+      // Her ay butonu yaklaşık 75px genişliğinde
+      const targetX = Math.max(0, (selectedMonth - 1) * 75 - 120);
+      monthScrollRef.current.scrollTo({ x: targetX, animated: true });
+    }
+  }, [selectedMonth]);
   const monthLessons = useMemo(() => {
     const monthStr = selectedMonth < 10 ? `0${selectedMonth}` : `${selectedMonth}`;
     const prefix = `${selectedYear}-${monthStr}`;
@@ -520,7 +531,12 @@ export default function App() {
 
       {/* YIL & AY SEÇİCİ ŞERİT */}
       <View style={styles.monthSelectorBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.monthScroll}>
+        <ScrollView
+          ref={monthScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.monthScroll}
+        >
           {MONTH_NAMES.map((mName, index) => {
             const mNum = index + 1;
             const isSelected = selectedMonth === mNum;
@@ -1201,7 +1217,9 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: '100%',
     backgroundColor: '#F8FAFC',
+    overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 18,

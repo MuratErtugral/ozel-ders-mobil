@@ -26,10 +26,12 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        user-select: none;
-        -webkit-user-select: none;
-        -webkit-touch-callout: none;
         background-color: #F8FAFC;
+        -webkit-overflow-scrolling: touch;
+      }
+      /* Mobil web kaydırma kilidini kaldır */
+      * {
+        -webkit-tap-highlight-color: transparent;
       }
     </style>
   </head>
