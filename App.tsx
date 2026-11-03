@@ -556,7 +556,7 @@ export default function App() {
       </View>
 
       {/* YIL & AY SEÇİCİ ŞERİT */}
-      <View style={styles.monthSelectorBar}>
+      <View style={[styles.monthSelectorBar, isDarkMode && { backgroundColor: '#1E293B', borderBottomColor: '#334155' }]}>
         <ScrollView
           ref={monthScrollRef}
           horizontal
@@ -569,13 +569,23 @@ export default function App() {
             return (
               <TouchableOpacity
                 key={mName}
-                style={[styles.monthChip, isSelected && styles.monthChipActive]}
+                style={[
+                  styles.monthChip,
+                  isDarkMode && { backgroundColor: '#334155' },
+                  isSelected && styles.monthChipActive,
+                ]}
                 onPress={() => {
                   setSelectedMonth(mNum);
                   setSelectedDateFilter(null);
                 }}
               >
-                <Text style={[styles.monthChipText, isSelected && styles.monthChipTextActive]}>
+                <Text
+                  style={[
+                    styles.monthChipText,
+                    isDarkMode && { color: '#94A3B8' },
+                    isSelected && styles.monthChipTextActive,
+                  ]}
+                >
                   {mName}
                 </Text>
               </TouchableOpacity>
@@ -601,20 +611,20 @@ export default function App() {
               ListHeaderComponent={
                 <View>
                   {/* Aylık Özet Kartı */}
-                  <View style={styles.summaryCard}>
+                  <View style={[styles.summaryCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
                     <View style={styles.summaryItem}>
-                      <Text style={styles.summaryLabel}>Ders Sayısı</Text>
-                      <Text style={styles.summaryValue}>{monthLessons.length} Ders</Text>
+                      <Text style={[styles.summaryLabel, isDarkMode && { color: '#94A3B8' }]}>Ders Sayısı</Text>
+                      <Text style={[styles.summaryValue, isDarkMode && { color: '#F8FAFC' }]}>{monthLessons.length} Ders</Text>
                     </View>
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, isDarkMode && { backgroundColor: '#334155' }]} />
                     <View style={styles.summaryItem}>
-                      <Text style={styles.summaryLabel}>Toplam Süre</Text>
-                      <Text style={styles.summaryValue}>{monthTotalHours} Saat</Text>
+                      <Text style={[styles.summaryLabel, isDarkMode && { color: '#94A3B8' }]}>Toplam Süre</Text>
+                      <Text style={[styles.summaryValue, isDarkMode && { color: '#F8FAFC' }]}>{monthTotalHours} Saat</Text>
                     </View>
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, isDarkMode && { backgroundColor: '#334155' }]} />
                     <View style={styles.summaryItem}>
-                      <Text style={styles.summaryLabel}>Hakediş</Text>
-                      <Text style={[styles.summaryValue, { color: '#059669' }]}>
+                      <Text style={[styles.summaryLabel, isDarkMode && { color: '#94A3B8' }]}>Hakediş</Text>
+                      <Text style={[styles.summaryValue, { color: '#10B981' }]}>
                         {monthTotalIncome.toLocaleString('tr-TR')} TL
                       </Text>
                     </View>
@@ -623,7 +633,7 @@ export default function App() {
                   {/* Günlük Takvim Filtresi Barı */}
                   <View style={styles.dateFilterContainer}>
                     <View style={styles.dateFilterHeader}>
-                      <Text style={styles.sectionHeaderTitle}>
+                      <Text style={[styles.sectionHeaderTitle, isDarkMode && { color: '#E2E8F0' }]}>
                         {selectedDateFilter ? `📅 ${selectedDateFilter} Dersleri` : '📅 Tüm Ayın Dersleri'}
                       </Text>
                       {selectedDateFilter && (
@@ -642,13 +652,17 @@ export default function App() {
                         return (
                           <TouchableOpacity
                             key={dStr}
-                            style={[styles.dayBadge, isDaySelected && styles.dayBadgeActive]}
+                            style={[
+                              styles.dayBadge,
+                              isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' },
+                              isDaySelected && styles.dayBadgeActive,
+                            ]}
                             onPress={() => setSelectedDateFilter(isDaySelected ? null : dStr)}
                           >
-                            <Text style={[styles.dayBadgeNum, isDaySelected && styles.dayBadgeNumActive]}>
+                            <Text style={[styles.dayBadgeNum, isDarkMode && { color: '#F8FAFC' }, isDaySelected && styles.dayBadgeNumActive]}>
                               {dayNum}
                             </Text>
-                            <Text style={[styles.dayBadgeCount, isDaySelected && styles.dayBadgeCountActive]}>
+                            <Text style={[styles.dayBadgeCount, isDarkMode && { color: '#94A3B8' }, isDaySelected && styles.dayBadgeCountActive]}>
                               {count} ders
                             </Text>
                           </TouchableOpacity>
@@ -662,19 +676,19 @@ export default function App() {
                 const sColor = item.students?.color || '#3B82F6';
                 const total = item.hours * item.hourly_rate;
                 return (
-                  <View style={styles.lessonCard}>
+                  <View style={[styles.lessonCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
                     <View style={[styles.colorBadge, { backgroundColor: sColor }]} />
                     <View style={{ flex: 1, marginLeft: 12 }}>
-                      <Text style={styles.studentName}>{item.students?.name || 'Öğrenci'}</Text>
-                      <Text style={styles.lessonDate}>
+                      <Text style={[styles.studentName, isDarkMode && { color: '#F8FAFC' }]}>{item.students?.name || 'Öğrenci'}</Text>
+                      <Text style={[styles.lessonDate, isDarkMode && { color: '#94A3B8' }]}>
                         {item.lesson_date} • {item.hours} Saat ({item.hourly_rate} TL/saat)
                       </Text>
-                      {item.notes ? <Text style={styles.lessonNotes}>"{item.notes}"</Text> : null}
+                      {item.notes ? <Text style={[styles.lessonNotes, isDarkMode && { color: '#64748B' }]}>"{item.notes}"</Text> : null}
                     </View>
 
                     <View style={{ alignItems: 'flex-end', marginRight: 10 }}>
-                      <Text style={styles.lessonPrice}>+{total.toLocaleString('tr-TR')} TL</Text>
-                      <Text style={styles.sourceTag}>{item.students?.source || 'Elden'}</Text>
+                      <Text style={[styles.lessonPrice, isDarkMode && { color: '#34D399' }]}>+{total.toLocaleString('tr-TR')} TL</Text>
+                      <Text style={[styles.sourceTag, isDarkMode && { backgroundColor: '#334155', color: '#CBD5E1' }]}>{item.students?.source || 'Elden'}</Text>
                     </View>
 
                     {/* Düzenle & Sil Butonları */}
@@ -683,7 +697,7 @@ export default function App() {
                         style={styles.actionIconBtn}
                         onPress={() => openEditLessonModal(item)}
                       >
-                        <Ionicons name="pencil" size={16} color="#4F46E5" />
+                        <Ionicons name="pencil" size={16} color={isDarkMode ? '#818CF8' : '#4F46E5'} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.actionIconBtn}
@@ -713,14 +727,16 @@ export default function App() {
                     key={tab}
                     style={[
                       styles.studentFilterBtn,
-                      studentFilter === tab && styles.studentFilterBtnActive,
+                      isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' },
+                      studentFilter === tab && (isDarkMode ? { backgroundColor: '#312E81', borderColor: '#6366F1' } : styles.studentFilterBtnActive),
                     ]}
                     onPress={() => setStudentFilter(tab)}
                   >
                     <Text
                       style={[
                         styles.studentFilterBtnText,
-                        studentFilter === tab && styles.studentFilterBtnTextActive,
+                        isDarkMode && { color: '#94A3B8' },
+                        studentFilter === tab && (isDarkMode ? { color: '#C7D2FE' } : styles.studentFilterBtnTextActive),
                       ]}
                     >
                       {tab === 'active' ? '🟢 Aktifler' : tab === 'passive' ? '🔴 Pasifler' : 'Tümü'} (
@@ -742,7 +758,7 @@ export default function App() {
                 contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
                 ListHeaderComponent={
                   <TouchableOpacity
-                    style={styles.newStudentBtn}
+                    style={[styles.newStudentBtn, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#4F46E5' }]}
                     onPress={() => {
                       setEditingStudent(null);
                       setStudentName('');
@@ -753,19 +769,19 @@ export default function App() {
                       setStudentModalVisible(true);
                     }}
                   >
-                    <Ionicons name="person-add" size={18} color="#4F46E5" />
-                    <Text style={styles.newStudentBtnText}>Yeni Öğrenci Ekle</Text>
+                    <Ionicons name="person-add" size={18} color="#6366F1" />
+                    <Text style={[styles.newStudentBtnText, isDarkMode && { color: '#818CF8' }]}>Yeni Öğrenci Ekle</Text>
                   </TouchableOpacity>
                 }
                 renderItem={({ item }) => (
-                  <View style={[styles.studentCard, !item.is_active && styles.passiveCard]}>
+                  <View style={[styles.studentCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }, !item.is_active && (isDarkMode ? { backgroundColor: '#0F172A', opacity: 0.5 } : styles.passiveCard)]}>
                     <View style={[styles.avatar, { backgroundColor: item.color || '#3B82F6' }]}>
                       <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
                     </View>
 
                     <View style={{ flex: 1, marginLeft: 14 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={[styles.studentCardName, !item.is_active && { color: '#94A3B8' }]}>
+                        <Text style={[styles.studentCardName, isDarkMode && { color: '#F8FAFC' }, !item.is_active && { color: '#64748B' }]}>
                           {item.name}
                         </Text>
                         <View
@@ -775,7 +791,7 @@ export default function App() {
                           ]}
                         />
                       </View>
-                      <Text style={styles.studentCardDetail}>
+                      <Text style={[styles.studentCardDetail, isDarkMode && { color: '#94A3B8' }]}>
                         {item.hourly_rate} {item.currency} / saat • {item.source}
                       </Text>
                     </View>
@@ -786,7 +802,7 @@ export default function App() {
                         style={styles.editStudentBtn}
                         onPress={() => openEditStudent(item)}
                       >
-                        <Ionicons name="create-outline" size={20} color="#64748B" />
+                        <Ionicons name="create-outline" size={20} color={isDarkMode ? '#94A3B8' : '#64748B'} />
                       </TouchableOpacity>
 
                       {item.is_active && (
@@ -794,7 +810,7 @@ export default function App() {
                           style={styles.quickAddLessonBtn}
                           onPress={() => openNewLessonModal(item)}
                         >
-                          <Ionicons name="add-circle" size={28} color="#4F46E5" />
+                          <Ionicons name="add-circle" size={28} color="#6366F1" />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -821,39 +837,39 @@ export default function App() {
 
               {/* 3 Büyük İstatistik Kartı */}
               <View style={styles.statsRow}>
-                <View style={[styles.statBoxMini, { borderLeftColor: '#10B981' }]}>
-                  <Text style={styles.statBoxLabelMini}>Aylık Ciro</Text>
-                  <Text style={[styles.statBoxValueMini, { color: '#059669' }]}>
+                <View style={[styles.statBoxMini, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }, { borderLeftColor: '#10B981' }]}>
+                  <Text style={[styles.statBoxLabelMini, isDarkMode && { color: '#94A3B8' }]}>Aylık Ciro</Text>
+                  <Text style={[styles.statBoxValueMini, { color: '#10B981' }]}>
                     {monthTotalIncome.toLocaleString('tr-TR')} TL
                   </Text>
                 </View>
 
-                <View style={[styles.statBoxMini, { borderLeftColor: '#6366F1' }]}>
-                  <Text style={styles.statBoxLabelMini}>Toplam Süre</Text>
-                  <Text style={[styles.statBoxValueMini, { color: '#4F46E5' }]}>
+                <View style={[styles.statBoxMini, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }, { borderLeftColor: '#6366F1' }]}>
+                  <Text style={[styles.statBoxLabelMini, isDarkMode && { color: '#94A3B8' }]}>Toplam Süre</Text>
+                  <Text style={[styles.statBoxValueMini, isDarkMode ? { color: '#818CF8' } : { color: '#4F46E5' }]}>
                     {monthTotalHours} Saat
                   </Text>
                 </View>
               </View>
 
               {/* Görünüm Modu Seçici (Öğrenci Bazlı / Kaynak Bazlı) */}
-              <View style={styles.statsToggleRow}>
+              <View style={[styles.statsToggleRow, isDarkMode && { backgroundColor: '#1E293B' }]}>
                 <TouchableOpacity
                   style={[
                     styles.statsToggleBtn,
-                    statsViewMode === 'student' && styles.statsToggleBtnActive,
+                    statsViewMode === 'student' && (isDarkMode ? { backgroundColor: '#334155' } : styles.statsToggleBtnActive),
                   ]}
                   onPress={() => setStatsViewMode('student')}
                 >
                   <Ionicons
                     name="person"
                     size={16}
-                    color={statsViewMode === 'student' ? '#4F46E5' : '#64748B'}
+                    color={statsViewMode === 'student' ? (isDarkMode ? '#818CF8' : '#4F46E5') : '#64748B'}
                   />
                   <Text
                     style={[
                       styles.statsToggleBtnText,
-                      statsViewMode === 'student' && styles.statsToggleBtnTextActive,
+                      statsViewMode === 'student' && (isDarkMode ? { color: '#F8FAFC' } : styles.statsToggleBtnTextActive),
                     ]}
                   >
                     Öğrenci Bazlı ({studentBreakdown.length})
@@ -863,19 +879,19 @@ export default function App() {
                 <TouchableOpacity
                   style={[
                     styles.statsToggleBtn,
-                    statsViewMode === 'source' && styles.statsToggleBtnActive,
+                    statsViewMode === 'source' && (isDarkMode ? { backgroundColor: '#334155' } : styles.statsToggleBtnActive),
                   ]}
                   onPress={() => setStatsViewMode('source')}
                 >
                   <Ionicons
                     name="wallet"
                     size={16}
-                    color={statsViewMode === 'source' ? '#4F46E5' : '#64748B'}
+                    color={statsViewMode === 'source' ? (isDarkMode ? '#818CF8' : '#4F46E5') : '#64748B'}
                   />
                   <Text
                     style={[
                       styles.statsToggleBtnText,
-                      statsViewMode === 'source' && styles.statsToggleBtnTextActive,
+                      statsViewMode === 'source' && (isDarkMode ? { color: '#F8FAFC' } : styles.statsToggleBtnTextActive),
                     ]}
                   >
                     Kaynak Bazlı ({sourceBreakdown.length})
@@ -898,26 +914,26 @@ export default function App() {
                     studentBreakdown.map(([name, data]) => {
                       const percent = monthTotalIncome > 0 ? ((data.income / monthTotalIncome) * 100).toFixed(0) : 0;
                       return (
-                        <View key={name} style={styles.breakdownCard}>
+                        <View key={name} style={[styles.breakdownCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                               <View style={[styles.breakdownDot, { backgroundColor: data.color }]} />
-                              <Text style={styles.breakdownName}>{name}</Text>
+                              <Text style={[styles.breakdownName, isDarkMode && { color: '#F8FAFC' }]}>{name}</Text>
                             </View>
-                            <Text style={styles.breakdownIncome}>
+                            <Text style={[styles.breakdownIncome, isDarkMode && { color: '#34D399' }]}>
                               {data.income.toLocaleString('tr-TR')} TL
                             </Text>
                           </View>
 
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-                            <Text style={styles.breakdownSub}>
+                            <Text style={[styles.breakdownSub, isDarkMode && { color: '#94A3B8' }]}>
                               {data.count} ders • {data.hours} saat
                             </Text>
-                            <Text style={styles.breakdownPercent}>%{percent}</Text>
+                            <Text style={[styles.breakdownPercent, isDarkMode && { color: '#818CF8' }]}>%{percent}</Text>
                           </View>
 
                           {/* İlerleme Çubuğu */}
-                          <View style={styles.progressBarBg}>
+                          <View style={[styles.progressBarBg, isDarkMode && { backgroundColor: '#334155' }]}>
                             <View
                               style={[
                                 styles.progressBarFill,
@@ -947,26 +963,26 @@ export default function App() {
                     sourceBreakdown.map(([srcName, data]) => {
                       const percent = monthTotalIncome > 0 ? ((data.income / monthTotalIncome) * 100).toFixed(0) : 0;
                       return (
-                        <View key={srcName} style={styles.breakdownCard}>
+                        <View key={srcName} style={[styles.breakdownCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                               <View style={[styles.breakdownDot, { backgroundColor: data.color }]} />
-                              <Text style={styles.breakdownName}>{srcName}</Text>
+                              <Text style={[styles.breakdownName, isDarkMode && { color: '#F8FAFC' }]}>{srcName}</Text>
                             </View>
-                            <Text style={styles.breakdownIncome}>
+                            <Text style={[styles.breakdownIncome, isDarkMode && { color: '#34D399' }]}>
                               {data.income.toLocaleString('tr-TR')} TL
                             </Text>
                           </View>
 
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-                            <Text style={styles.breakdownSub}>
+                            <Text style={[styles.breakdownSub, isDarkMode && { color: '#94A3B8' }]}>
                               {data.count} ders • {data.hours} saat
                             </Text>
                             <Text style={[styles.breakdownPercent, { color: data.color }]}>%{percent}</Text>
                           </View>
 
                           {/* İlerleme Çubuğu */}
-                          <View style={styles.progressBarBg}>
+                          <View style={[styles.progressBarBg, isDarkMode && { backgroundColor: '#334155' }]}>
                             <View
                               style={[
                                 styles.progressBarFill,
@@ -1003,14 +1019,14 @@ export default function App() {
       )}
 
       {/* ALT TAB BAR */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, isDarkMode && { backgroundColor: '#1E293B', borderTopColor: '#334155' }]}>
         <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('lessons')}>
           <Ionicons
             name={activeTab === 'lessons' ? 'calendar' : 'calendar-outline'}
             size={22}
-            color={activeTab === 'lessons' ? '#4F46E5' : '#94A3B8'}
+            color={activeTab === 'lessons' ? (isDarkMode ? '#818CF8' : '#4F46E5') : (isDarkMode ? '#64748B' : '#94A3B8')}
           />
-          <Text style={[styles.tabText, activeTab === 'lessons' && styles.tabTextActive]}>
+          <Text style={[styles.tabText, isDarkMode && { color: '#64748B' }, activeTab === 'lessons' && (isDarkMode ? { color: '#818CF8' } : styles.tabTextActive)]}>
             Dersler
           </Text>
         </TouchableOpacity>
@@ -1019,9 +1035,9 @@ export default function App() {
           <Ionicons
             name={activeTab === 'students' ? 'people' : 'people-outline'}
             size={22}
-            color={activeTab === 'students' ? '#4F46E5' : '#94A3B8'}
+            color={activeTab === 'students' ? (isDarkMode ? '#818CF8' : '#4F46E5') : (isDarkMode ? '#64748B' : '#94A3B8')}
           />
-          <Text style={[styles.tabText, activeTab === 'students' && styles.tabTextActive]}>
+          <Text style={[styles.tabText, isDarkMode && { color: '#64748B' }, activeTab === 'students' && (isDarkMode ? { color: '#818CF8' } : styles.tabTextActive)]}>
             Öğrenciler
           </Text>
         </TouchableOpacity>
@@ -1030,9 +1046,9 @@ export default function App() {
           <Ionicons
             name={activeTab === 'stats' ? 'pie-chart' : 'pie-chart-outline'}
             size={22}
-            color={activeTab === 'stats' ? '#4F46E5' : '#94A3B8'}
+            color={activeTab === 'stats' ? (isDarkMode ? '#818CF8' : '#4F46E5') : (isDarkMode ? '#64748B' : '#94A3B8')}
           />
-          <Text style={[styles.tabText, activeTab === 'stats' && styles.tabTextActive]}>
+          <Text style={[styles.tabText, isDarkMode && { color: '#64748B' }, activeTab === 'stats' && (isDarkMode ? { color: '#818CF8' } : styles.tabTextActive)]}>
             Özet & Detay
           </Text>
         </TouchableOpacity>
@@ -1041,28 +1057,28 @@ export default function App() {
       {/* MODAL: DERS EKLE / DÜZENLE */}
       <Modal visible={lessonModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, isDarkMode && { backgroundColor: '#1E293B' }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, isDarkMode && { color: '#F8FAFC' }]}>
                 {editingLesson ? 'Dersi Düzenle ✏️' : 'Yeni Ders Ekle ✨'}
               </Text>
               <TouchableOpacity onPress={() => setLessonModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color={isDarkMode ? '#94A3B8' : '#64748B'} />
               </TouchableOpacity>
             </View>
 
             {/* Öğrenci Seçimi (Aramalı Dropdown / Select Menü) */}
-            <Text style={styles.inputLabel}>Öğrenci Seç:</Text>
+            <Text style={[styles.inputLabel, isDarkMode && { color: '#CBD5E1' }]}>Öğrenci Seç:</Text>
 
             {/* Seçili Öğrenci Kutusu */}
             <TouchableOpacity
-              style={styles.dropdownSelector}
+              style={[styles.dropdownSelector, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
               onPress={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               {selectedStudent ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={[styles.chipDot, { backgroundColor: selectedStudent.color || '#3B82F6', width: 12, height: 12 }]} />
-                  <Text style={styles.dropdownSelectedText}>
+                  <Text style={[styles.dropdownSelectedText, isDarkMode && { color: '#F8FAFC' }]}>
                     {selectedStudent.name} ({selectedStudent.hourly_rate} TL/saat)
                   </Text>
                 </View>
@@ -1072,22 +1088,22 @@ export default function App() {
               <Ionicons
                 name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
                 size={18}
-                color="#64748B"
+                color={isDarkMode ? '#94A3B8' : '#64748B'}
               />
             </TouchableOpacity>
 
             {/* Açılır Arama Listesi */}
             {isDropdownOpen && (
-              <View style={styles.dropdownListContainer}>
+              <View style={[styles.dropdownListContainer, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}>
                 {/* Arama Inputu */}
-                <View style={styles.dropdownSearchWrapper}>
+                <View style={[styles.dropdownSearchWrapper, isDarkMode && { backgroundColor: '#1E293B' }]}>
                   <Ionicons name="search" size={16} color="#94A3B8" />
                   <TextInput
-                    style={styles.dropdownSearchInput}
+                    style={[styles.dropdownSearchInput, isDarkMode && { color: '#F8FAFC' }]}
                     placeholder="Öğrenci ara..."
                     value={studentSearchQuery}
                     onChangeText={setStudentSearchQuery}
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#64748B"
                     autoFocus
                   />
                   {studentSearchQuery.length > 0 && (
@@ -1107,7 +1123,8 @@ export default function App() {
                         key={s.id}
                         style={[
                           styles.dropdownItem,
-                          selectedStudent?.id === s.id && styles.dropdownItemActive,
+                          isDarkMode && { borderBottomColor: '#1E293B' },
+                          selectedStudent?.id === s.id && (isDarkMode ? { backgroundColor: '#312E81' } : styles.dropdownItemActive),
                         ]}
                         onPress={() => {
                           setSelectedStudent(s);
@@ -1118,11 +1135,11 @@ export default function App() {
                       >
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           <View style={[styles.chipDot, { backgroundColor: s.color || '#3B82F6' }]} />
-                          <Text style={[styles.dropdownItemText, selectedStudent?.id === s.id && { fontWeight: '700', color: '#4F46E5' }]}>
+                          <Text style={[styles.dropdownItemText, isDarkMode && { color: '#E2E8F0' }, selectedStudent?.id === s.id && { fontWeight: '700', color: isDarkMode ? '#818CF8' : '#4F46E5' }]}>
                             {s.name}
                           </Text>
                         </View>
-                        <Text style={{ fontSize: 12, color: '#64748B' }}>
+                        <Text style={{ fontSize: 12, color: isDarkMode ? '#94A3B8' : '#64748B' }}>
                           {s.hourly_rate} TL • {s.source}
                         </Text>
                       </TouchableOpacity>
@@ -1132,25 +1149,33 @@ export default function App() {
             )}
 
             {/* Tarih Girişi */}
-            <Text style={styles.inputLabel}>Tarih (YYYY-MM-DD):</Text>
+            <Text style={[styles.inputLabel, isDarkMode && { color: '#CBD5E1' }]}>Tarih (YYYY-MM-DD):</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155', color: '#F8FAFC' }]}
               value={lessonDate}
               onChangeText={setLessonDate}
               placeholder="2026-11-02"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#64748B"
             />
 
             {/* Ders Süresi */}
-            <Text style={styles.inputLabel}>Ders Süresi (Saat):</Text>
+            <Text style={[styles.inputLabel, isDarkMode && { color: '#CBD5E1' }]}>Ders Süresi (Saat):</Text>
             <View style={styles.hoursRow}>
               {['1', '1.5', '2', '3'].map((h) => (
                 <TouchableOpacity
                   key={h}
-                  style={[styles.hourBtn, lessonHours === h && styles.hourBtnActive]}
+                  style={[
+                    styles.hourBtn,
+                    isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                    lessonHours === h && (isDarkMode ? { backgroundColor: '#312E81', borderColor: '#6366F1' } : styles.hourBtnActive),
+                  ]}
                   onPress={() => setLessonHours(h)}
                 >
-                  <Text style={[styles.hourBtnText, lessonHours === h && styles.hourBtnTextActive]}>
+                  <Text style={[
+                    styles.hourBtnText,
+                    isDarkMode && { color: '#94A3B8' },
+                    lessonHours === h && (isDarkMode ? { color: '#C7D2FE' } : styles.hourBtnTextActive),
+                  ]}>
                     {h} Saat
                   </Text>
                 </TouchableOpacity>
@@ -1158,28 +1183,28 @@ export default function App() {
             </View>
 
             {/* Saatlik Ücret */}
-            <Text style={styles.inputLabel}>Saatlik Ücret (TL):</Text>
+            <Text style={[styles.inputLabel, isDarkMode && { color: '#CBD5E1' }]}>Saatlik Ücret (TL):</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155', color: '#F8FAFC' }]}
               keyboardType="numeric"
               value={lessonRate}
               onChangeText={setLessonRate}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#64748B"
             />
 
             {/* Not */}
-            <Text style={styles.inputLabel}>Ders Notu (Opsiyonel):</Text>
+            <Text style={[styles.inputLabel, isDarkMode && { color: '#CBD5E1' }]}>Ders Notu (Opsiyonel):</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155', color: '#F8FAFC' }]}
               placeholder="Örn: Parabol konusu bitirildi"
               value={lessonNotes}
               onChangeText={setLessonNotes}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#64748B"
             />
 
             {/* Tutar Önizleme */}
-            <View style={styles.previewBox}>
-              <Text style={styles.previewText}>
+            <View style={[styles.previewBox, isDarkMode && { backgroundColor: '#064E3B' }]}>
+              <Text style={[styles.previewText, isDarkMode && { color: '#6EE7B7' }]}>
                 Toplam: {((parseFloat(lessonHours) || 0) * (parseFloat(lessonRate) || 0)).toLocaleString('tr-TR')} TL
               </Text>
             </View>
