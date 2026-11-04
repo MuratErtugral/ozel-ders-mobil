@@ -16,6 +16,7 @@ import {
   Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { supabase } from './src/lib/supabase';
 import { Student, Lesson } from './src/types';
 import AuthScreen from './src/screens/AuthScreen';
@@ -49,8 +50,8 @@ export default function App() {
   const [studentFilter, setStudentFilter] = useState<'all' | 'active' | 'passive'>('active');
   const [statsViewMode, setStatsViewMode] = useState<'student' | 'source'>('student'); // 'student' veya 'source'
 
-  // Ay Scroll Referansı (Seçili aya otomatik kaydırma)
-  const monthScrollRef = React.useRef<any>(null);
+  // Ay Seçici Açılır Menü (Dropdown) Durumu
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
   // Modal: Ders Ekle / Düzenle
   const [lessonModalVisible, setLessonModalVisible] = useState(false);
@@ -151,21 +152,42 @@ export default function App() {
     fetchData();
   };
 
-  // Seçili ay değiştiğinde veya sayfa ilk açıldığında o aya garantili otomatik kaydır
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (monthScrollRef.current) {
-        // Her ay butonu yaklaşık 78px
-        const targetX = Math.max(0, (selectedMonth - 1) * 78 - 100);
-        if (typeof monthScrollRef.current.scrollTo === 'function') {
-          monthScrollRef.current.scrollTo({ x: targetX, animated: true });
-        } else if (monthScrollRef.current.scrollLeft !== undefined) {
-          monthScrollRef.current.scrollLeft = targetX;
-        }
-      }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [selectedMonth, activeTab]);
+  // Kaynak Bazlı Ders Saatlerini Mesaj Olarak Kopyalama (WhatsApp / SMS Formatı)
+  const handleCopySourceSummary = async (srcName: string) => {
+    // Sadece seçili aya ve o kaynağa ait dersler
+    const sourceLessons = monthLessons.filter(l => (l.students?.source || 'Elden') === srcName);
+    if (sourceLessons.length === 0) {
+      Alert.alert('Bilgi', `${srcName} için bu ay kayıtlı ders bulunamadı.`);
+      return;
+    }
+
+    // Öğrenci bazında saatleri topla
+    const studentHoursMap: { [sName: string]: number } = {};
+    sourceLessons.forEach(l => {
+      const name = l.students?.name || 'Öğrenci';
+      studentHoursMap[name] = (studentHoursMap[name] || 0) + l.hours;
+    });
+
+    const monthTitle = `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`;
+    let msg = `📅 *${monthTitle} - ${srcName} Dersi Dökümü*\n\n`;
+
+    let totalHours = 0;
+    Object.entries(studentHoursMap)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([name, hours]) => {
+        msg += `• ${name}: ${hours} saat\n`;
+        totalHours += hours;
+      });
+
+    msg += `\n*Toplam Süre:* ${totalHours} saat`;
+
+    await Clipboard.setStringAsync(msg);
+    Alert.alert(
+      'Kopyalandı! 📋✨',
+      `${srcName} için ${monthTitle} ders saatleri panoya kopyalandı. Doğrudan WhatsApp veya mesaja yapıştırabilirsiniz.`
+    );
+  };
+
   const monthLessons = useMemo(() => {
     const monthStr = selectedMonth < 10 ? `0${selectedMonth}` : `${selectedMonth}`;
     const prefix = `${selectedYear}-${monthStr}`;
@@ -520,9 +542,23 @@ export default function App() {
           <Text style={[styles.headerSubtitle, isDarkMode && { color: '#818CF8' }]}>
             {session.user.user_metadata?.full_name || 'ÖĞRETMEN ASİSTANI'}
           </Text>
-          <Text style={[styles.headerTitle, isDarkMode && { color: '#F8FAFC' }]}>
-            {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
-          </Text>
+
+          {/* AY VE YIL SEÇİCİ DROPDOWN BUTONU */}
+          <TouchableOpacity
+            style={styles.headerMonthSelector}
+            onPress={() => setIsMonthPickerOpen(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.headerTitle, isDarkMode && { color: '#F8FAFC' }]}>
+              {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
+            </Text>
+            <Ionicons
+              name="chevron-down"
+              size={18}
+              color={isDarkMode ? '#818CF8' : '#4F46E5'}
+              style={{ marginLeft: 4, marginTop: 4 }}
+            />
+          </TouchableOpacity>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
@@ -553,45 +589,6 @@ export default function App() {
             <Ionicons name="log-out-outline" size={20} color={isDarkMode ? '#F87171' : '#4F46E5'} />
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* YIL & AY SEÇİCİ ŞERİT */}
-      <View style={[styles.monthSelectorBar, isDarkMode && { backgroundColor: '#1E293B', borderBottomColor: '#334155' }]}>
-        <ScrollView
-          ref={monthScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.monthScroll}
-        >
-          {MONTH_NAMES.map((mName, index) => {
-            const mNum = index + 1;
-            const isSelected = selectedMonth === mNum;
-            return (
-              <TouchableOpacity
-                key={mName}
-                style={[
-                  styles.monthChip,
-                  isDarkMode && { backgroundColor: '#334155' },
-                  isSelected && styles.monthChipActive,
-                ]}
-                onPress={() => {
-                  setSelectedMonth(mNum);
-                  setSelectedDateFilter(null);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.monthChipText,
-                    isDarkMode && { color: '#94A3B8' },
-                    isSelected && styles.monthChipTextActive,
-                  ]}
-                >
-                  {mName}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
       </View>
 
       {loading ? (
@@ -990,6 +987,26 @@ export default function App() {
                               ]}
                             />
                           </View>
+
+                          {/* WHATSAPP İÇİN DERSLERİ KOPYALA BUTONU */}
+                          <TouchableOpacity
+                            style={[
+                              styles.copySummaryBtn,
+                              isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                            ]}
+                            onPress={() => handleCopySourceSummary(srcName)}
+                            activeOpacity={0.7}
+                          >
+                            <Ionicons name="copy-outline" size={15} color={isDarkMode ? '#818CF8' : '#4F46E5'} />
+                            <Text
+                              style={[
+                                styles.copySummaryBtnText,
+                                isDarkMode && { color: '#C7D2FE' },
+                              ]}
+                            >
+                              {srcName} Derslerini Kopyala (WhatsApp / Mesaj)
+                            </Text>
+                          </TouchableOpacity>
                         </View>
                       );
                     })
@@ -997,20 +1014,20 @@ export default function App() {
                 </View>
               )}
 
-              {/* HESAP & GÜVENLİK AYARLARI (Apple Store Zorunluluğu) */}
-              <View style={styles.accountSettingsCard}>
-                <Text style={styles.accountSettingsTitle}>⚙️ Hesap & Gizlilik</Text>
-                <Text style={styles.accountSettingsSub}>
-                  Giriş yapılan hesap: {session?.user?.email}
+              {/* Çıkış Yap Butonu (Hesap Sil yerine sade ve şık profil alanı) */}
+              <View style={[styles.accountSettingsCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+                <Text style={[styles.accountSettingsTitle, isDarkMode && { color: '#F8FAFC' }]}>👤 Öğretmen Hesabı</Text>
+                <Text style={[styles.accountSettingsSub, isDarkMode && { color: '#94A3B8' }]}>
+                  {session?.user?.email}
                 </Text>
 
                 <TouchableOpacity
-                  style={styles.deleteAccountBtn}
-                  onPress={handleDeleteAccount}
+                  style={[styles.simpleLogoutBtn, isDarkMode && { backgroundColor: '#334155' }]}
+                  onPress={handleLogout}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                  <Text style={styles.deleteAccountBtnText}>Hesabımı ve Tüm Verilerimi Sil</Text>
+                  <Ionicons name="log-out-outline" size={18} color={isDarkMode ? '#F87171' : '#EF4444'} />
+                  <Text style={[styles.simpleLogoutBtnText, isDarkMode && { color: '#F87171' }]}>Oturumu Kapat</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -1313,6 +1330,58 @@ export default function App() {
           </View>
         </View>
       </Modal>
+
+      {/* MODAL: AY SEÇİCİ (MODERN SELECT POPUP) */}
+      <Modal visible={isMonthPickerOpen} animationType="fade" transparent>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsMonthPickerOpen(false)}
+        >
+          <View style={[styles.monthPickerCard, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+            <View style={styles.monthPickerHeader}>
+              <Text style={[styles.monthPickerTitle, isDarkMode && { color: '#F8FAFC' }]}>
+                Dönem Seçin ({selectedYear})
+              </Text>
+              <TouchableOpacity onPress={() => setIsMonthPickerOpen(false)}>
+                <Ionicons name="close" size={22} color={isDarkMode ? '#94A3B8' : '#64748B'} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.monthGrid}>
+              {MONTH_NAMES.map((mName, idx) => {
+                const mNum = idx + 1;
+                const isSelected = selectedMonth === mNum;
+                return (
+                  <TouchableOpacity
+                    key={mName}
+                    style={[
+                      styles.monthGridItem,
+                      isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                      isSelected && (isDarkMode ? { backgroundColor: '#4F46E5', borderColor: '#4F46E5' } : styles.monthGridItemActive),
+                    ]}
+                    onPress={() => {
+                      setSelectedMonth(mNum);
+                      setSelectedDateFilter(null);
+                      setIsMonthPickerOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.monthGridText,
+                        isDarkMode && { color: '#CBD5E1' },
+                        isSelected && { color: '#FFFFFF', fontWeight: '800' },
+                      ]}
+                    >
+                      {mName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1346,6 +1415,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0F172A',
     marginTop: 2,
+  },
+  headerMonthSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingRight: 6,
+    borderRadius: 8,
   },
   addBtn: {
     flexDirection: 'row',
@@ -1450,7 +1526,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#E2E8F0',
   },
   accountSettingsTitle: {
     fontSize: 15,
@@ -1463,18 +1539,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 14,
   },
-  deleteAccountBtn: {
+  simpleLogoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: '#E2E8F0',
     borderRadius: 12,
     paddingVertical: 12,
     gap: 8,
   },
-  deleteAccountBtnText: {
+  simpleLogoutBtnText: {
     color: '#EF4444',
     fontSize: 14,
     fontWeight: '700',
@@ -1847,6 +1923,24 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
+  copySummaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF2FF',
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    marginTop: 10,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
+  },
+  copySummaryBtnText: {
+    color: '#4F46E5',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   tabBar: {
     position: 'absolute',
     bottom: 0,
@@ -2024,5 +2118,56 @@ const styles = StyleSheet.create({
   colorCircleSelected: {
     borderWidth: 3,
     borderColor: '#0F172A',
+  },
+  monthPickerCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 36,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  monthPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  monthPickerTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'space-between',
+  },
+  monthGridItem: {
+    width: '31%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthGridItemActive: {
+    backgroundColor: '#4F46E5',
+    borderColor: '#4F46E5',
+  },
+  monthGridText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#334155',
   },
 });
